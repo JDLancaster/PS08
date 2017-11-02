@@ -28,7 +28,7 @@ dim(train)
 model_formula <- as.formula(Device ~ X + Y + Z)
 
 # Values to use:
-n_values <- c(10,50,100,500,1000,5000,10000,50000,100000,500000) #add 100000,500000
+n_values <- c(500,1000,5000,10000,50000,100000,500000,1000000,5000000,10000000) #add 100000,500000
 k_values <- c(2, 3, 4, 10,15,20,50,75,100)
 
 runtime_dataframe <- expand.grid(n_values, k_values) %>%
@@ -49,23 +49,23 @@ stopwatch <- function(k,n){
 }
 
 #tic()
-system.time(function_times <- mapply(stopwatch, k = runtime_dataframe$k, n = runtime_dataframe$n)) #15.44
-function_times<-mapply(stopwatch, k = runtime_dataframe$k, n = runtime_dataframe$n)
+system.time(function_times <- mapply(stopwatch, k = runtime_dataframe$k, n = runtime_dataframe$n)) 
+function_times<-mapply(stopwatch, k = runtime_dataframe$k, n = runtime_dataframe$n)#252.06
 #toc()
-mean1<-mean(function_times) #0.668
+mean1<-mean(function_times) #2.0785
 
 loop_times <- c()
-system.time(for(i in k_values){for(j in n_values){loop_times <- c(loop_times, stopwatch(i,j))}}) #15.09
-mean2 <- mean(loop_times) #0.608
+system.time(for(i in k_values){for(j in n_values){loop_times <- c(loop_times, stopwatch(i,j))}}) #246.364
+mean2 <- mean(loop_times) #1.9927
 
-runtimes_dataframe <- cbind(runtime_dataframe, function_times)
+runtime_dataframe <- cbind(runtime_dataframe, function_times)
 
 # Plot your results ---------------------------------------------------------
 # Think of creative ways to improve this barebones plot. Note: you don't have to
 # necessarily use geom_point
 
-runtime_plot <- ggplot(runtime_dataframe, aes(x=n, y=runtime, col=factor(k))) +
-  geom_line() + labs(title = "KNN Runtime", y = "runtime")
+runtime_plot <- ggplot(runtime_dataframe, aes(x=n, y=runtime, col=as.factor(k))) +
+  geom_line() + labs(title = "KNN Runtime", y = "runtime")+theme_classic()
 
 runtime_plot
 ggsave(filename="Jeff_Lancaster.png", width=16, height = 9)
@@ -80,4 +80,19 @@ ggsave(filename="Jeff_Lancaster.png", width=16, height = 9)
 # -k: number of neighbors to consider
 # -d: number of predictors used? In this case d is fixed at 3
 
-#Confused what you are getting at here? Graph appears to say that the more bigger our splits are the faster the knn runs, which makes sense.
+#For n: As n increases, the Runtime of the function increases somewhere along the lines of O(nlog(n)) or something  positive like that.
+a<-runtime_dataframe %>% 
+  filter(k==100)
+ggplot(a,aes(x=n,runtime))+geom_point()
+#As we can see above, for k=100, the line has a positive slope (notice how the 1x10^7 point corresponds to 1x10^9 on the y-axis)
+
+#For k: As k increases, runtime increases significantly. I'm guessing at least O(n^2), possibly even O(n^3).
+
+#For d: D is fixed in our case, but if I had to guess, it would be O(n)
+
+
+#For all 3 combined, we can see that the overall KNN for (n,k,d) 
+#is something more than O(n) and something less than O(n^2), so I'm 
+#going to guess that the overal runtime is something like 
+#Runtime = k/n+d
+                                                                    
